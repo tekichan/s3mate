@@ -1,0 +1,50 @@
+name: Build and Release S3Mate
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # e.g. v1.0.0
+
+permissions:
+  contents: write   # required to create releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Grant Gradle execute permission
+        run: chmod +x gradlew
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build fat JAR
+        run: ./gradlew clean build -Pversion=${{ steps.version.outputs.version }}
+
+      - name: Locate JAR
+        id: jar
+        run: |
+          JAR=$(ls build/generated/s3mate-*.jar | head -n 1)
+          echo "jar=$JAR" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.jar.outputs.jar }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

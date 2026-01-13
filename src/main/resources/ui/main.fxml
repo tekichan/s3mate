@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="self.tekichan.s3mate.controller.MainController">
+
+    <fx:define>
+        <ContextMenu fx:id="metadataContextMenu">
+            <items>
+                <MenuItem text="Copy"
+                          onAction="#onCopySelectedCell"/>
+            </items>
+        </ContextMenu>
+    </fx:define>
+
+    <top>
+        <Label text="S3Mate" styleClass="title"/>
+    </top>
+
+    <center>
+        <VBox spacing="12" styleClass="content" VBox.vgrow="ALWAYS">
+
+            <TextField fx:id="pathField"
+                       promptText="s3://bucket/key or https://bucket.s3.amazonaws.com/key"/>
+
+            <HBox spacing="10">
+                <Button text="View Metadata" onAction="#onViewMetadata"/>
+                <Button text="Download File" onAction="#onDownload"/>
+                <Button text="Upload File" onAction="#onUpload"/>
+            </HBox>
+
+            <TableView fx:id="metadataTable"
+                       VBox.vgrow="ALWAYS"
+                       contextMenu="$metadataContextMenu">
+                <columns>
+                    <TableColumn fx:id="fieldCol" text="Field" prefWidth="200"/>
+                    <TableColumn fx:id="valueCol" text="Value" prefWidth="600"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox styleClass="status-bar" spacing="10" alignment="CENTER_LEFT">
+            <ProgressBar fx:id="progressBar"
+                         prefWidth="150"
+                         visible="false"/>
+
+            <Label fx:id="statusLabel"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>
