@@ -3,10 +3,10 @@ name: Build and Release S3Mate
 on:
   push:
     tags:
-      - "v*.*.*"   # e.g. v1.0.0
+      - "v*.*.*"
 
 permissions:
-  contents: write   # required to create releases
+  contents: write
 
 jobs:
   release:
@@ -29,9 +29,7 @@ jobs:
           gradle-version: 8.7
 
       - name: Verify Gradle installation
-        run: |
-          which gradle
-          gradle --version
+        run: gradle --version
 
       - name: Extract version from tag
         id: version
@@ -40,18 +38,25 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build fat JAR
-        run: gradle clean build -Pversion=${{ steps.version.outputs.version }}
+        run: |
+          gradle clean shadowJar -Pversion=${{ steps.version.outputs.version }}
 
-      - name: Locate JAR
+      - name: Verify build output
+        run: |
+          echo "Generated files:"
+          ls -lh build/generated || exit 1
+
+      - name: Locate fat JAR
         id: jar
         run: |
           JAR=$(ls build/generated/s3mate-*.jar | head -n 1)
+          if [ -z "$JAR" ]; then
+            echo "❌ Fat JAR not found"
+            exit 1
+          fi
           echo "jar=$JAR" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            ${{ steps.jar.outputs.jar }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.jar.outputs.jar }}

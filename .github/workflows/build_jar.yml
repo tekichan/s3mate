@@ -35,7 +35,7 @@ jobs:
           gradle --version
 
       - name: Build fat JAR
-        run: gradle clean build
+        run: gradle clean shadowJar
 
       - name: Prepare dist directory
         run: |
