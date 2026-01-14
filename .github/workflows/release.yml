@@ -33,7 +33,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build fat JAR
-        run: ./gradlew clean build -Pversion=${{ steps.version.outputs.version }}
+        run: gradle clean build -Pversion=${{ steps.version.outputs.version }}
 
       - name: Locate JAR
         id: jar

@@ -28,7 +28,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Build fat JAR
-        run: ./gradlew clean build
+        run: gradle clean build
 
       - name: Prepare dist directory
         run: |
