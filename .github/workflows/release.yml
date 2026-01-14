@@ -26,9 +26,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Grant Gradle execute permission
-        run: chmod +x gradlew
-
       - name: Extract version from tag
         id: version
         run: |
