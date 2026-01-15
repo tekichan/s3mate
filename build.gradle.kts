@@ -1,14 +1,15 @@
+import java.io.File
+
 plugins {
     application
     java
     id("org.openjfx.javafxplugin") version "0.1.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "self.tekichan.s3mate"
 version = project.findProperty("version")
     ?.toString()
-    ?.takeIf { it.isNotBlank() && "unspecified" != it }
+    ?.takeIf { it.isNotBlank() && it != "unspecified" }
     ?: "SNAPSHOT"
 
 java {
@@ -31,7 +32,10 @@ dependencies {
 
 javafx {
     version = "21.0.2"
-    modules = listOf("javafx.controls", "javafx.fxml")
+    modules = listOf(
+        "javafx.controls",
+        "javafx.fxml"
+    )
 }
 
 application {
@@ -42,24 +46,88 @@ tasks.test {
     useJUnitPlatform()
 }
 
-val jarBaseName = "s3mate"
-val jarVersion = project.version
+tasks.named<Jar>("jar") {
+    manifest {
+        attributes(
+            "Main-Class" to application.mainClass.get()
+        )
+    }
+}
 
-tasks {
-    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("s3mate")
-        archiveVersion.set(project.version.toString())
-        archiveClassifier.set("")   // no "-all"
+tasks.build {
+    dependsOn("jar")
+}
 
-        destinationDirectory.set(layout.buildDirectory.dir("generated"))
-        mergeServiceFiles()
+tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Build fat JAR with all dependencies (classpath-based)"
 
-        manifest {
-            attributes["Main-Class"] = application.mainClass.get()
-        }
+    archiveBaseName.set("s3mate")
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("all")
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+            "Main-Class" to application.mainClass.get()
+        )
     }
 
-    build {
-        dependsOn(shadowJar)
-    }
+    // Include compiled classes
+    from(sourceSets.main.get().output)
+
+    // Include runtime dependencies
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.name.endsWith(".jar") }
+            .map { zipTree(it) }
+    })
+}
+
+/**
+ * macOS app-image using jpackage
+ * Output:
+ *   build/jpackage/mac/S3Mate.app
+ */
+tasks.register<Exec>("jpackageMac") {
+    dependsOn("installDist")
+
+    val runtimeClasspath = configurations.runtimeClasspath.get()
+        .filter { it.name.contains("javafx") }
+        .joinToString(File.pathSeparator) { it.absolutePath }
+
+    commandLine(
+        "jpackage",
+        "--type", "app-image",
+        "--name", "S3Mate",
+        "--input", "build/install/s3mate/lib",
+        "--main-jar", "s3mate-${project.version}.jar",
+        "--main-class", "self.tekichan.s3mate.MainApp",
+        "--module-path", runtimeClasspath,
+        "--add-modules", "javafx.controls,javafx.fxml",
+        "--dest", "build/jpackage/mac",
+        "--verbose"
+    )
+}
+
+tasks.register<Exec>("jpackageWin") {
+    dependsOn("installDist")
+
+    val javafxModulePath = configurations.runtimeClasspath.get()
+        .filter { it.name.contains("javafx") }
+        .joinToString(File.pathSeparator) { it.absolutePath }
+
+    commandLine(
+        "jpackage",
+        "--type", "exe",
+        "--name", "S3Mate",
+        "--input", "build/install/s3mate/lib",
+        "--main-jar", "s3mate-${project.version}.jar",
+        "--main-class", "self.tekichan.s3mate.MainApp",
+        "--module-path", javafxModulePath,
+        "--add-modules", "javafx.controls,javafx.fxml",
+        "--dest", "build/jpackage/win",
+        "--verbose"
+    )
 }
