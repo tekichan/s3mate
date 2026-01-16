@@ -16,6 +16,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -28,34 +34,33 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Verify Gradle installation
+      - name: Verify Gradle
         run: gradle --version
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
+      # -------- Build fat JAR --------
       - name: Build fat JAR
         run: |
-          gradle clean shadowJar -Pversion=${{ steps.version.outputs.version }}
+          gradle clean fatJar -Pversion=${{ steps.version.outputs.version }}
 
-      - name: Verify build output
+      # -------- Build Linux jpackage --------
+      - name: Build Linux jpackage
         run: |
-          echo "Generated files:"
-          ls -lh build/generated || exit 1
+          gradle jpackageLin -Pversion=${{ steps.version.outputs.version }}
+          tar -czf s3mate-linux.tar.gz -C build/jpackage/linux S3Mate
 
-      - name: Locate fat JAR
+      # -------- Locate release files --------
+      - name: Locate release artifacts
         id: jar
         run: |
-          JAR=$(ls build/generated/s3mate-*.jar | head -n 1)
+          JAR=$(ls build/libs/s3mate-*-all.jar | head -n 1)
           if [ -z "$JAR" ]; then
             echo "❌ Fat JAR not found"
             exit 1
           fi
-          echo "jar=$JAR" >> $GITHUB_OUTPUT
 
+          echo "jar=$JAR s3mate-linux.tar.gz" >> $GITHUB_OUTPUT
+
+      # -------- Create GitHub Release --------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

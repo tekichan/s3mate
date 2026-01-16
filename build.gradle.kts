@@ -46,21 +46,23 @@ tasks.test {
     useJUnitPlatform()
 }
 
+/**
+ * Normal thin JAR (used by installDist / jpackage)
+ */
 tasks.named<Jar>("jar") {
     manifest {
-        attributes(
-            "Main-Class" to application.mainClass.get()
-        )
+        attributes("Main-Class" to application.mainClass.get())
     }
 }
 
-tasks.build {
-    dependsOn("jar")
-}
-
+/**
+ * FAT JAR
+ * - Includes ALL non-JavaFX dependencies
+ * - JavaFX is intentionally excluded
+ */
 tasks.register<Jar>("fatJar") {
     group = "build"
-    description = "Build fat JAR with all dependencies (classpath-based)"
+    description = "Fat JAR for internal Java developers (JavaFX via module-path)"
 
     archiveBaseName.set("s3mate")
     archiveVersion.set(project.version.toString())
@@ -69,32 +71,46 @@ tasks.register<Jar>("fatJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
-        attributes(
-            "Main-Class" to application.mainClass.get()
-        )
+        attributes("Main-Class" to application.mainClass.get())
     }
 
-    // Include compiled classes
     from(sourceSets.main.get().output)
 
-    // Include runtime dependencies
     from({
         configurations.runtimeClasspath.get()
-            .filter { it.name.endsWith(".jar") }
+            .filter { file ->
+                file.name.endsWith(".jar") &&
+                        !file.name.startsWith("javafx-")
+            }
             .map { zipTree(it) }
     })
 }
 
+tasks.build {
+    dependsOn("fatJar")
+}
+
+/**
+ * Prints JavaFX module-path for manual java execution
+ */
+tasks.register("printJavafxModulePath") {
+    doLast {
+        val path = configurations.runtimeClasspath.get()
+            .filter { it.name.startsWith("javafx-") }
+            .joinToString(File.pathSeparator) { it.absolutePath }
+
+        println(path)
+    }
+}
+
 /**
  * macOS app-image using jpackage
- * Output:
- *   build/jpackage/mac/S3Mate.app
  */
 tasks.register<Exec>("jpackageMac") {
     dependsOn("installDist")
 
-    val runtimeClasspath = configurations.runtimeClasspath.get()
-        .filter { it.name.contains("javafx") }
+    val javafxModulePath = configurations.runtimeClasspath.get()
+        .filter { it.name.startsWith("javafx-") }
         .joinToString(File.pathSeparator) { it.absolutePath }
 
     commandLine(
@@ -104,18 +120,21 @@ tasks.register<Exec>("jpackageMac") {
         "--input", "build/install/s3mate/lib",
         "--main-jar", "s3mate-${project.version}.jar",
         "--main-class", "self.tekichan.s3mate.MainApp",
-        "--module-path", runtimeClasspath,
+        "--module-path", javafxModulePath,
         "--add-modules", "javafx.controls,javafx.fxml",
         "--dest", "build/jpackage/mac",
         "--verbose"
     )
 }
 
+/**
+ * Windows EXE using jpackage
+ */
 tasks.register<Exec>("jpackageWin") {
     dependsOn("installDist")
 
     val javafxModulePath = configurations.runtimeClasspath.get()
-        .filter { it.name.contains("javafx") }
+        .filter { it.name.startsWith("javafx-") }
         .joinToString(File.pathSeparator) { it.absolutePath }
 
     commandLine(
@@ -128,6 +147,32 @@ tasks.register<Exec>("jpackageWin") {
         "--module-path", javafxModulePath,
         "--add-modules", "javafx.controls,javafx.fxml",
         "--dest", "build/jpackage/win",
+        "--verbose"
+    )
+}
+
+/**
+ * Linux app-image using jpackage
+ * Output:
+ *   build/jpackage/linux/S3Mate
+ */
+tasks.register<Exec>("jpackageLin") {
+    dependsOn("installDist")
+
+    val javafxModulePath = configurations.runtimeClasspath.get()
+        .filter { it.name.startsWith("javafx-") }
+        .joinToString(File.pathSeparator) { it.absolutePath }
+
+    commandLine(
+        "jpackage",
+        "--type", "app-image",
+        "--name", "S3Mate",
+        "--input", "build/install/s3mate/lib",
+        "--main-jar", "s3mate-${project.version}.jar",
+        "--main-class", "self.tekichan.s3mate.MainApp",
+        "--module-path", javafxModulePath,
+        "--add-modules", "javafx.controls,javafx.fxml",
+        "--dest", "build/jpackage/linux",
         "--verbose"
     )
 }

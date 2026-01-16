@@ -18,12 +18,28 @@ It is designed for developers and operators who want a simple GUI tool without i
 - Java **21** or later
 - Valid AWS credentials
 
-## Run
+## Build and Run
 
-By Gradle:
+Run By Gradle: `./gradlew clean run`
+
+Build Fat JAR By Gradle: `./gradlew clean build`
+
+Run Fat JAR:
 ```bash
-java -jar s3mate-<version>.jar
+java \
+--module-path "$(./gradlew -q printJavafxModulePath)" \
+--add-modules javafx.controls,javafx.fxml \
+-jar build/libs/s3mate-SNAPSHOT-all.jar
 ```
+
+Build MacOS specific package: `./gradlew clean jpackageMac`
+and the package is located at `build/jpackage/mac/S3Mate.app`
+
+Build Windows specific package: `./gradlew clean jpackageWin`
+and the package is located at `build/jpackage/win/S3Mate.exe`
+
+Build Linux specific package: `./gradlew clean jpackageLin`
+and the package is located at `build/jpackage/linux/S3Mate/bin/S3Mate`
 
 ## Authors
 - Teki Chan *tekichan@gmail.com*

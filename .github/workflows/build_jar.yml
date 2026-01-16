@@ -1,4 +1,4 @@
-name: Build and Publish JAR
+name: Build and Publish Fat JAR
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # REQUIRED to push back to repo
+  contents: write
 
 jobs:
   build:
@@ -29,24 +29,22 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Verify Gradle installation
-        run: |
-          which gradle
-          gradle --version
+      - name: Verify Gradle
+        run: gradle --version
 
       - name: Build fat JAR
-        run: gradle clean shadowJar
+        run: gradle clean fatJar
 
       - name: Prepare dist directory
         run: |
           mkdir -p dist
-          cp build/generated/s3mate-*.jar dist/
+          cp build/libs/s3mate-*-all.jar dist/
 
-      - name: Commit JAR to repository
+      - name: Commit fat JAR to repository
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add dist/
-          git commit -m "Add compiled s3mate JAR" || echo "No changes to commit"
+          git commit -m "Add compiled s3mate fat JAR" || echo "No changes to commit"
           git push
