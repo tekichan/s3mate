@@ -47,17 +47,16 @@ jobs:
           sha256sum build/libs/s3mate-${{ steps.version.outputs.version }}-all.jar > build/checksums-linux.txt
           sha256sum build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz >> build/checksums-linux.txt
 
-      # --- Delete old assets for this tag (important!) ---
-      - name: Delete existing release assets
+      - name: Delete existing Linux assets
         uses: mknejp/delete-release-assets@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.version.outputs.version }}
           fail-if-no-release: false
+          fail-if-no-assets: false
           assets: |
             s3mate-*linux*
             checksums-linux.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Linux artifacts
         uses: softprops/action-gh-release@v2
@@ -105,13 +104,13 @@ jobs:
       - name: Delete existing macOS assets
         uses: mknejp/delete-release-assets@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.version.outputs.version }}
           fail-if-no-release: false
+          fail-if-no-assets: false
           assets: |
             s3mate-*mac*
             checksums-mac.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload macOS artifacts
         uses: softprops/action-gh-release@v2
@@ -167,13 +166,13 @@ jobs:
       - name: Delete existing Windows assets
         uses: mknejp/delete-release-assets@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ steps.version.outputs.version }}
           fail-if-no-release: false
+          fail-if-no-assets: false
           assets: |
             s3mate-*win*
             checksums-win.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifacts
         uses: softprops/action-gh-release@v2
