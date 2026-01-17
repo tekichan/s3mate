@@ -153,7 +153,7 @@ jobs:
           gradle clean jpackageWin "-Pversion=${{ steps.version.outputs.version }}"
           
           Compress-Archive `
-            build\jpackage\win\S3Mate `
+            build\jpackage\win\*.exe `
             build\s3mate-${{ steps.version.outputs.version }}-win.zip
 
       - name: Generate checksums
