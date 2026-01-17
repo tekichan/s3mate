@@ -150,8 +150,8 @@ jobs:
       - name: Build Windows EXE
         shell: pwsh
         run: |
-          gradle clean jpackageWin -Pversion=${{ steps.version.outputs.version }}
-
+          gradle clean jpackageWin "-Pversion=${{ steps.version.outputs.version }}"
+          
           Compress-Archive `
             build\jpackage\win\S3Mate `
             build\s3mate-${{ steps.version.outputs.version }}-win.zip
