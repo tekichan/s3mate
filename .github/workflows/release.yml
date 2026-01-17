@@ -34,9 +34,6 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Verify Gradle
-        run: gradle --version
-
       # -------- Build fat JAR --------
       - name: Build fat JAR
         run: |
@@ -46,22 +43,18 @@ jobs:
       - name: Build Linux jpackage
         run: |
           gradle jpackageLin -Pversion=${{ steps.version.outputs.version }}
-          tar -czf s3mate-linux.tar.gz -C build/jpackage/linux S3Mate
+          tar -czf build/s3mate-linux.tar.gz -C build/jpackage/linux S3Mate
 
-      # -------- Locate release files --------
-      - name: Locate release artifacts
-        id: jar
+      # -------- Verify artifacts --------
+      - name: Verify release artifacts
         run: |
-          JAR=$(ls build/libs/s3mate-*-all.jar | head -n 1)
-          if [ -z "$JAR" ]; then
-            echo "❌ Fat JAR not found"
-            exit 1
-          fi
-
-          echo "jar=$JAR s3mate-linux.tar.gz" >> $GITHUB_OUTPUT
+          ls -lh build/libs
+          ls -lh build/s3mate-linux.tar.gz
 
       # -------- Create GitHub Release --------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.jar.outputs.jar }}
+          files: |
+            build/libs/s3mate-*-all.jar
+            build/s3mate-linux.tar.gz
