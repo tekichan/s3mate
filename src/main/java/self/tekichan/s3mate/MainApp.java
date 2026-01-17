@@ -31,7 +31,8 @@ public class MainApp extends Application {
                 MainApp.class.getResource(MAIN_CSS_PATH).toExternalForm()
         );
 
-        stage.setTitle(APP_TITLE);
+        String appTitle = APP_TITLE + ((AppMode.DEMO) ? " (Demo)": "");
+        stage.setTitle(appTitle);
         stage.setScene(scene);
         stage.show();
     }

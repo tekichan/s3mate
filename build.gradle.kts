@@ -26,6 +26,7 @@ dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.25.60"))
     implementation("software.amazon.awssdk:s3")
     implementation("org.slf4j:slf4j-simple:2.0.17")
+    implementation("tools.jackson.core:jackson-databind:3.0.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 }
@@ -44,6 +45,13 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.named<JavaExec>("run") {
+    systemProperty(
+        "s3mate.demo",
+        project.findProperty("s3mate.demo") ?: "false"
+    )
 }
 
 /**

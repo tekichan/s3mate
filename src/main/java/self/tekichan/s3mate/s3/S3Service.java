@@ -3,7 +3,6 @@ package self.tekichan.s3mate.s3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.regions.Region;
@@ -17,8 +16,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
-import java.util.function.LongConsumer;
 
+/**
+ * Service component to support S3 operations
+ */
 public class S3Service {
     private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
 
@@ -59,6 +60,11 @@ public class S3Service {
                 .build();
     }
 
+    /**
+     * Retrieve S3 Metadata values
+     * @param path  S3 Path object
+     * @return  Response of S3 Head Object operation
+     */
     public HeadObjectResponse metadata(S3Path path) {
         return client(path).headObject(
                 HeadObjectRequest.builder()
@@ -68,6 +74,13 @@ public class S3Service {
         );
     }
 
+    /**
+     * Download S3 object
+     * @param path          S3 Path object source
+     * @param target        Target local path
+     * @param progress      Consumer for progress bar
+     * @throws IOException
+     */
     public void download(
             S3Path path,
             Path target,
@@ -99,6 +112,13 @@ public class S3Service {
         }
     }
 
+    /**
+     * Upload a local file to S3 destination
+     * @param path          S3 Path destination
+     * @param file          Local file source
+     * @param progress      Consumer of progress bar
+     * @throws IOException
+     */
     public void upload(
             S3Path path,
             Path file,
@@ -128,5 +148,4 @@ public class S3Service {
                 RequestBody.fromInputStream(in, total)
         );
     }
-
 }

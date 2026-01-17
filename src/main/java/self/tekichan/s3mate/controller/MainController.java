@@ -8,6 +8,8 @@ import javafx.scene.input.*;
 import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import self.tekichan.s3mate.AppMode;
+import self.tekichan.s3mate.demo.DemoMetadataLoader;
 import self.tekichan.s3mate.s3.MetadataItem;
 import self.tekichan.s3mate.s3.S3Path;
 import self.tekichan.s3mate.s3.S3PathParser;
@@ -17,6 +19,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GUI Controller for JavaFX main layout
+ */
 public class MainController {
     private static final Logger logger = LoggerFactory.getLogger(MainController.class);
 
@@ -29,6 +34,9 @@ public class MainController {
 
     private final S3Service s3 = new S3Service();
 
+    /**
+     * Initialise the UI components
+     */
     @FXML
     void initialize() {
         metadataTable.getSelectionModel().setCellSelectionEnabled(true);
@@ -45,10 +53,25 @@ public class MainController {
         valueCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().value()));
     }
 
+    /**
+     * When View Metadata button is pressed
+     */
     @FXML
     void onViewMetadata() {
         try {
             clearMetadata();
+
+            // Demo routine
+            if (AppMode.DEMO) {
+                metadataTable.setItems(
+                        FXCollections.observableArrayList(
+                                DemoMetadataLoader.load()
+                        )
+                );
+                pathField.setText("s3://example-assets/documents/2024/report-summary.pdf");
+                setStatus("Demo mode – sample metadata", false);
+                return;
+            }
 
             S3Path path = S3PathParser.parse(pathField.getText());
             var meta = s3.metadata(path);
@@ -88,10 +111,19 @@ public class MainController {
         items.add(new MetadataItem(key, s));
     }
 
+    /**
+     * When Download button is pressed
+     */
     @FXML
     void onDownload() {
         try {
             clearMetadata();
+
+            // Demo routine
+            if (AppMode.DEMO) {
+                demoProgress();
+                return;
+            }
 
             S3Path path = S3PathParser.parse(pathField.getText());
 
@@ -137,10 +169,19 @@ public class MainController {
                 : s3Key;
     }
 
+    /**
+     * When Upload button is pressed
+      */
     @FXML
     void onUpload() {
         try {
             clearMetadata();
+
+            // Demo routine
+            if (AppMode.DEMO) {
+                demoProgress();
+                return;
+            }
 
             FileChooser chooser = new FileChooser();
             File file = chooser.showOpenDialog(null);
@@ -175,6 +216,9 @@ public class MainController {
         }
     }
 
+    /**
+     * When Copy button of a selected table cell is pressed
+     */
     @FXML
     private void onCopySelectedCell() {
         var selection = metadataTable.getSelectionModel().getSelectedCells();
@@ -228,5 +272,19 @@ public class MainController {
         if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         return String.format("%.1f %sB", bytes / Math.pow(1024, exp), "KMGTPE".charAt(exp - 1));
+    }
+
+    private void demoProgress() {
+        Task<Void> task = new Task<>() {
+            @Override protected Void call() throws Exception {
+                for (int i = 0; i <= 100; i += 5) {
+                    updateProgress(i, 100);
+                    Thread.sleep(60);
+                }
+                return null;
+            }
+        };
+        bindProgress(task, "Completed (demo)");
+        new Thread(task).start();
     }
 }

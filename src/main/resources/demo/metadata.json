@@ -1,0 +1,11 @@
+[
+  { "field": "Bucket", "value": "example-assets" },
+  { "field": "Key", "value": "documents/2024/report-summary.pdf" },
+  { "field": "Size", "value": "842 KB" },
+  { "field": "Content Type", "value": "application/pdf" },
+  { "field": "Last Modified", "value": "2024-10-17T12:02:41Z" },
+  { "field": "ETag", "value": "\"9c8af9e5f1c7a9f...\"" },
+  { "field": "Storage Class", "value": "STANDARD" },
+  { "field": "Encryption", "value": "AES256" },
+  { "field": "Checksum", "value": "SHA256: b1d4c9e..." }
+]

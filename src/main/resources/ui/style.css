@@ -4,11 +4,11 @@
 }
 
 .content {
-    -fx-padding: 16;
+    -fx-padding: 0 16 16 16;
 }
 
 .title {
-    -fx-padding: 14;
+    -fx-padding: 8 0 8 16;
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: white;

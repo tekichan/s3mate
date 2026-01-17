@@ -6,6 +6,8 @@ S3Mate is a lightweight JavaFX desktop application that allows you to quickly ch
 
 It is designed for developers and operators who want a simple GUI tool without installing heavy AWS consoles or browser-based tools.
 
+![Screenshot](./docs/screenshot.png)
+
 ## Features
 - Supports all common S3 path formats
 - View object metadata

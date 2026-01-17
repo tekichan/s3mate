@@ -5,6 +5,13 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * S3 Path Parser
+ * <p>
+ *     It parses a S3 path of various representations
+ *     and extracts important information defined in S3Path.
+ * </p>
+ */
 public final class S3PathParser {
 
     private S3PathParser() {}
@@ -21,6 +28,11 @@ public final class S3PathParser {
     private static final Pattern WEBSITE =
             Pattern.compile("^([^.]+)\\.s3-website[.-]([a-z0-9-]+)\\.amazonaws\\.com$");
 
+    /**
+     * Parse the input S3 Path string and extracts important information
+     * @param input     S3 Path string
+     * @return          S3Path object with important information
+     */
     public static S3Path parse(String input) {
         if (input == null || input.isBlank()) {
             throw new IllegalArgumentException("S3 path must not be empty");
