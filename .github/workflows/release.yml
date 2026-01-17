@@ -79,41 +79,19 @@ jobs:
         with:
           gradle-version: 8.7
 
-      # ---- Import Apple certificate ----
-      - name: Import macOS signing certificate
+      - name: Build macOS jpackage (unsigned)
         run: |
-          echo "$MAC_CERT_P12" | base64 --decode > cert.p12
-          security create-keychain -p "" build.keychain
-          security import cert.p12 -k build.keychain -P "$MAC_CERT_PASSWORD" -T /usr/bin/codesign
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
-        env:
-          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
-          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
-
-      - name: Build macOS jpackage
-        run: |
-          gradle clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
-          codesign --deep --force --options runtime \
-            --sign "${{ secrets.MAC_SIGN_IDENTITY }}" \
-            build/jpackage/mac/S3Mate.app
-
+          ./gradlew clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
+  
           tar -czf build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
             -C build/jpackage/mac S3Mate.app
-
-      - name: Generate checksums
-        run: |
-          shasum -a 256 build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
-            > build/checksums-mac.txt
 
       - name: Upload macOS artifacts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: |
-            build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz
-            build/checksums-mac.txt
-  
+          files: build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz
+
 
   # ======================= WINDOWS =======================
   release-win:
@@ -138,22 +116,14 @@ jobs:
         with:
           gradle-version: 8.7
 
+      - name: Install WiX Toolset
+        run: choco install wixtoolset -y
+
       - name: Build Windows EXE
+        shell: pwsh
         run: |
-          gradle clean jpackageWin -Pversion=${{ steps.version.outputs.version }}
+          ./gradlew clean jpackageWin -Pversion=${{ steps.version.outputs.version }}
+  
           Compress-Archive `
             build\jpackage\win\S3Mate `
             build\s3mate-${{ steps.version.outputs.version }}-win.zip
-
-      - name: Generate checksums
-        run: |
-          certutil -hashfile build\s3mate-${{ steps.version.outputs.version }}-win.zip SHA256 `
-            > build\checksums-win.txt
-
-      - name: Upload Windows artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          files: |
-            build/s3mate-${{ steps.version.outputs.version }}-win.zip
-            build/checksums-win.txt
