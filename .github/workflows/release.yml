@@ -11,8 +11,8 @@ permissions:
 env:
   APP_NAME: S3Mate
 
+# === Release for LINUX ===
 jobs:
-  # ======================= LINUX =======================
   release-linux:
     runs-on: ubuntu-latest
 
@@ -47,6 +47,18 @@ jobs:
           sha256sum build/libs/s3mate-${{ steps.version.outputs.version }}-all.jar > build/checksums-linux.txt
           sha256sum build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz >> build/checksums-linux.txt
 
+      # --- Delete old assets for this tag (important!) ---
+      - name: Delete existing release assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          tag: v${{ steps.version.outputs.version }}
+          fail-if-no-release: false
+          assets: |
+            s3mate-*linux*
+            checksums-linux.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload Linux artifacts
         uses: softprops/action-gh-release@v2
         with:
@@ -55,9 +67,9 @@ jobs:
             build/libs/s3mate-${{ steps.version.outputs.version }}-all.jar
             build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz
             build/checksums-linux.txt
-  
+          fail_on_unmatched_files: true
 
-  # ======================= MAC =======================
+  # === Release for MacOS ===
   release-mac:
     runs-on: macos-latest
     needs: release-linux
@@ -81,19 +93,36 @@ jobs:
 
       - name: Build macOS jpackage (unsigned)
         run: |
-          ./gradlew clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
-  
+          gradle clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
           tar -czf build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
             -C build/jpackage/mac S3Mate.app
+
+      - name: Generate checksums
+        run: |
+          shasum -a 256 build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
+            > build/checksums-mac.txt
+
+      - name: Delete existing macOS assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          tag: v${{ steps.version.outputs.version }}
+          fail-if-no-release: false
+          assets: |
+            s3mate-*mac*
+            checksums-mac.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload macOS artifacts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          files: build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz
+          files: |
+            build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz
+            build/checksums-mac.txt
+          fail_on_unmatched_files: true
 
-
-  # ======================= WINDOWS =======================
+  # === Release for Windows ===
   release-win:
     runs-on: windows-latest
     needs: release-linux
@@ -122,8 +151,35 @@ jobs:
       - name: Build Windows EXE
         shell: pwsh
         run: |
-          ./gradlew clean jpackageWin -Pversion=${{ steps.version.outputs.version }}
-  
+          gradle clean jpackageWin -Pversion=${{ steps.version.outputs.version }}
+
           Compress-Archive `
             build\jpackage\win\S3Mate `
             build\s3mate-${{ steps.version.outputs.version }}-win.zip
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-FileHash build\s3mate-${{ steps.version.outputs.version }}-win.zip -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  s3mate-${{ steps.version.outputs.version }}-win.zip" } |
+            Out-File build\checksums-win.txt -Encoding ascii
+
+      - name: Delete existing Windows assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          tag: v${{ steps.version.outputs.version }}
+          fail-if-no-release: false
+          assets: |
+            s3mate-*win*
+            checksums-win.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: |
+            build/s3mate-${{ steps.version.outputs.version }}-win.zip
+            build/checksums-win.txt
+          fail_on_unmatched_files: true
