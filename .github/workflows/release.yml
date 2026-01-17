@@ -43,18 +43,22 @@ jobs:
       - name: Build Linux jpackage
         run: |
           gradle jpackageLin -Pversion=${{ steps.version.outputs.version }}
-          tar -czf build/s3mate-linux.tar.gz -C build/jpackage/linux S3Mate
+
+          tar -czf build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz \
+            -C build/jpackage/linux S3Mate
 
       # -------- Verify artifacts --------
       - name: Verify release artifacts
         run: |
-          ls -lh build/libs
-          ls -lh build/s3mate-linux.tar.gz
+          ls -lh build/libs/s3mate-${{ steps.version.outputs.version }}-all.jar
+          ls -lh build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz
 
       # -------- Create GitHub Release --------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}
           files: |
-            build/libs/s3mate-*-all.jar
-            build/s3mate-linux.tar.gz
+            build/libs/s3mate-${{ steps.version.outputs.version }}-all.jar
+            build/s3mate-${{ steps.version.outputs.version }}-linux.tar.gz
+          fail_on_unmatched_files: true
