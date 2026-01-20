@@ -109,7 +109,7 @@ jobs:
           fail-if-no-release: false
           fail-if-no-assets: false
           assets: |
-            s3mate-*mac*
+            s3mate-*mac-x64*
             checksums-mac-x64.txt
 
       - name: Upload macOS artifacts
@@ -162,7 +162,7 @@ jobs:
           fail-if-no-release: false
           fail-if-no-assets: false
           assets: |
-            s3mate-*mac*
+            s3mate-*mac-arm64*
             checksums-mac-arm64.txt
 
       - name: Upload macOS artifacts
