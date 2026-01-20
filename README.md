@@ -43,5 +43,12 @@ and the package is located at `build/jpackage/win/S3Mate.exe`
 Build Linux specific package: `./gradlew clean jpackageLin`
 and the package is located at `build/jpackage/linux/S3Mate/bin/S3Mate`
 
+## Notes
+
+The compiled Mac release is not signed. You could see an error
+"Apple could not verify “S3Mate.app” is free of malware that may harm your Mac or compromise your privacy."
+
+You can still open the app after clicking "Open Anyway" in System Settings > Privacy & Security > Security.
+
 ## Authors
 - Teki Chan *tekichan@gmail.com*
