@@ -68,9 +68,9 @@ jobs:
             build/checksums-linux.txt
           fail_on_unmatched_files: true
 
-  # === Release for MacOS ===
+  # === Release for MacOS Intel ===
   release-mac:
-    runs-on: macos-latest
+    runs-on: macos-13   # Intel runner
     needs: release-linux
 
     steps:
@@ -93,13 +93,13 @@ jobs:
       - name: Build macOS jpackage (unsigned)
         run: |
           gradle clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
-          tar -czf build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
+          tar -czf build/s3mate-${{ steps.version.outputs.version }}-mac-x64.tar.gz \
             -C build/jpackage/mac S3Mate.app
 
       - name: Generate checksums
         run: |
-          shasum -a 256 build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz \
-            > build/checksums-mac.txt
+          shasum -a 256 build/s3mate-${{ steps.version.outputs.version }}-mac-x64.tar.gz \
+            > build/checksums-mac-x64.txt
 
       - name: Delete existing macOS assets
         uses: mknejp/delete-release-assets@v1
@@ -110,15 +110,68 @@ jobs:
           fail-if-no-assets: false
           assets: |
             s3mate-*mac*
-            checksums-mac.txt
+            checksums-mac-x64.txt
 
       - name: Upload macOS artifacts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           files: |
-            build/s3mate-${{ steps.version.outputs.version }}-mac.tar.gz
-            build/checksums-mac.txt
+            build/s3mate-${{ steps.version.outputs.version }}-mac-x64.tar.gz
+            build/checksums-mac-x64.txt
+          fail_on_unmatched_files: true
+
+  # === Release for MacOS ARM64 ===
+  release-mac:
+    runs-on: macos-latest   # Arm64 runner
+    needs: release-linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: 8.7
+
+      - name: Build macOS jpackage (unsigned)
+        run: |
+          gradle clean jpackageMac -Pversion=${{ steps.version.outputs.version }}
+          tar -czf build/s3mate-${{ steps.version.outputs.version }}-mac-arm64.tar.gz \
+            -C build/jpackage/mac S3Mate.app
+
+      - name: Generate checksums
+        run: |
+          shasum -a 256 build/s3mate-${{ steps.version.outputs.version }}-mac-arm64.tar.gz \
+            > build/checksums-mac-arm64.txt
+
+      - name: Delete existing macOS assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ steps.version.outputs.version }}
+          fail-if-no-release: false
+          fail-if-no-assets: false
+          assets: |
+            s3mate-*mac*
+            checksums-mac-arm64.txt
+
+      - name: Upload macOS artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: |
+            build/s3mate-${{ steps.version.outputs.version }}-mac-arm64.tar.gz
+            build/checksums-mac-arm64.txt
           fail_on_unmatched_files: true
 
   # === Release for Windows ===
