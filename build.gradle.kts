@@ -129,7 +129,7 @@ tasks.register<Exec>("jpackageMac") {
         "--main-jar", "s3mate-${project.version}.jar",
         "--main-class", "self.tekichan.s3mate.MainApp",
         "--module-path", javafxModulePath,
-        "--add-modules", "javafx.controls,javafx.fxml",
+        "--add-modules", "java.naming,javafx.controls,javafx.fxml",
         "--dest", "build/jpackage/mac",
         "--verbose"
     )
@@ -153,7 +153,7 @@ tasks.register<Exec>("jpackageWin") {
         "--main-jar", "s3mate-${project.version}.jar",
         "--main-class", "self.tekichan.s3mate.MainApp",
         "--module-path", javafxModulePath,
-        "--add-modules", "javafx.controls,javafx.fxml",
+        "--add-modules", "java.naming,javafx.controls,javafx.fxml",
         "--dest", "build/jpackage/win",
         "--verbose"
     )
@@ -179,7 +179,7 @@ tasks.register<Exec>("jpackageLin") {
         "--main-jar", "s3mate-${project.version}.jar",
         "--main-class", "self.tekichan.s3mate.MainApp",
         "--module-path", javafxModulePath,
-        "--add-modules", "javafx.controls,javafx.fxml",
+        "--add-modules", "java.naming,javafx.controls,javafx.fxml",
         "--dest", "build/jpackage/linux",
         "--verbose"
     )

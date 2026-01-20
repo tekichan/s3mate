@@ -14,6 +14,7 @@ import self.tekichan.s3mate.s3.MetadataItem;
 import self.tekichan.s3mate.s3.S3Path;
 import self.tekichan.s3mate.s3.S3PathParser;
 import self.tekichan.s3mate.s3.S3Service;
+import software.amazon.awssdk.core.exception.SdkException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -98,7 +99,7 @@ public class MainController {
             setStatus("Metadata loaded", false);
         } catch (Exception e) {
             logger.error("Failed at viewing Metadata", e);
-            setStatus(e.getMessage(), true);
+            setStatus(errorMessage(e), true);
         }
     }
 
@@ -159,7 +160,7 @@ public class MainController {
 
         } catch (Exception e) {
             logger.error("Download failed", e);
-            setStatus(e.getMessage(), true);
+            setStatus(errorMessage(e), true);
         }
     }
 
@@ -212,7 +213,7 @@ public class MainController {
 
         } catch (Exception e) {
             logger.error("Upload failed", e);
-            setStatus(e.getMessage(), true);
+            setStatus(errorMessage(e), true);
         }
     }
 
@@ -268,12 +269,6 @@ public class MainController {
         metadataTable.getItems().clear();
     }
 
-    private static String human(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(1024));
-        return String.format("%.1f %sB", bytes / Math.pow(1024, exp), "KMGTPE".charAt(exp - 1));
-    }
-
     private void demoProgress() {
         Task<Void> task = new Task<>() {
             @Override protected Void call() throws Exception {
@@ -286,5 +281,24 @@ public class MainController {
         };
         bindProgress(task, "Completed (demo)");
         new Thread(task).start();
+    }
+
+    private static String human(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(1024));
+        return String.format("%.1f %sB", bytes / Math.pow(1024, exp), "KMGTPE".charAt(exp - 1));
+    }
+
+    private static String errorMessage(Throwable e) {
+        if (e instanceof SdkException) {
+            return "Failed to access S3. Check credentials or permissions.";
+        }
+        if (e.getMessage() != null && !e.getMessage().isBlank()) {
+            return e.getMessage();
+        }
+        if (e.getCause() != null && e.getCause().getMessage() != null) {
+            return e.getCause().getMessage();
+        }
+        return e.getClass().getSimpleName();
     }
 }

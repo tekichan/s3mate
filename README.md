@@ -30,7 +30,7 @@ Run Fat JAR:
 ```bash
 java \
 --module-path "$(./gradlew -q printJavafxModulePath)" \
---add-modules javafx.controls,javafx.fxml \
+--add-modules java.naming,javafx.controls,javafx.fxml \
 -jar build/libs/s3mate-SNAPSHOT-all.jar
 ```
 
